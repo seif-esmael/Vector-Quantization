@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package vector.quantization;
 
 import java.io.File;
@@ -161,8 +157,8 @@ public class grayScaleRun extends javax.swing.JFrame {
                 int codebook = Integer.parseInt(codebookInput);
 
                 // Call the compress function with user input
-                result = CompressionDecompression.readImage(absolutePath);  
-                CompressionDecompression.Compress(result, vectorSize, codebook);
+                result = grayScale.readImage(absolutePath);
+                grayScale.Compress(result, vectorSize, codebook);
                 JOptionPane.showMessageDialog(this, "Compression Done Successfully!");
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Invalid input. Please enter valid integers for Vector Size and Codebook.");
@@ -187,7 +183,7 @@ public class grayScaleRun extends javax.swing.JFrame {
         String selectedDirectoryPath = selectedDirectory.getAbsolutePath();
 
         // Call the decompress function with the selected directory path
-        CompressionDecompression.decompress(absolutePath, selectedDirectoryPath + "/decompressed.jpg");
+        grayScale.decompress(absolutePath, selectedDirectoryPath + "/decompressed.jpg");
         
         JOptionPane.showMessageDialog(this, "Decompression Done Successfully!");
     }

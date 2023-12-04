@@ -4,8 +4,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
-
-public class CompressionDecompression {
+public class grayScale {
     public static void Compress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][]> vectors = new ArrayList<>();
         for (int i = 0; i < pixels.length; i += vectorSize) {
