@@ -26,6 +26,7 @@ public class CompressionDecompression {
             return null;
         }
     }
+    //______________________________________________________________________________________________________
     public static int[][][] readImageColored(String imagePath) {
         try {
             File file = new File(imagePath);
@@ -50,7 +51,7 @@ public class CompressionDecompression {
             return null;
         }
     }
-
+//______________________________________________________________________________________________________
     public static void writeImage(int[][] pixels, String outputPath) {
         try {
             int height = pixels.length;
@@ -68,32 +69,8 @@ public class CompressionDecompression {
             e.printStackTrace();
         }
     }
-
-    public static void writeColoredImage(int[][][] pixels, String outputPath) {
-        try {
-            int height = pixels.length;
-            int width = pixels[0].length;
-
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int red = pixels[y][x][0];
-                    int green = pixels[y][x][1];
-                    int blue = pixels[y][x][2];
-
-                    int pixelValue = (red << 16) | (green << 8) | blue;
-                    image.setRGB(x, y, pixelValue);
-                }
-            }
-
-            ImageIO.write(image, "jpg", new File(outputPath));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    public static void notColoredCompress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
+//______________________________________________________________________________________________________    
+    public static void Compress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][]> vectors = new ArrayList<>();
         for (int i = 0; i < pixels.length; i += vectorSize) {
             for (int j = 0; j < pixels[0].length; j += vectorSize) {
@@ -140,6 +117,7 @@ public class CompressionDecompression {
         ArrayList<Integer> compressedList = generateStream(vectors, codeBook);
         writeToFileAsCompressed(codeBook, compressedList, vectorSize, pixels.length, pixels[0].length);
     }
+    //______________________________________________________________________________________________________
     public static Map<int[][], List<int[][]>> suitableCentriods(Map<int[][], List<int[][]>> codeBook, List<int[][]> vectors) {
         for (int i = 0; i < vectors.size(); i++) {
             int[][] vector = vectors.get(i);
@@ -161,7 +139,7 @@ public class CompressionDecompression {
         }
         return codeBook;
     }
-
+    //______________________________________________________________________________________________________
     public static Map<int[][], List<int[][]>> split(Map<int[][], List<int[][]>> codeBook, int vectorSize) {
         Map<int[][], List<int[][]>> newCodeBook = new HashMap<>();
         for (int[][] centroid : codeBook.keySet()) {
@@ -192,7 +170,7 @@ public class CompressionDecompression {
         }
         return newCodeBook;
     }
-
+    //______________________________________________________________________________________________________
     public static ArrayList<Integer> generateStream(List<int[][]> vectors, Map<int[][], List<int[][]>> codeBook) {
         List<int[][]> centroids = codeBook.keySet().stream().toList();
         ArrayList<Integer> compressedList = new ArrayList<>();
@@ -203,7 +181,7 @@ public class CompressionDecompression {
         }
         return compressedList;
     }
-
+    //______________________________________________________________________________________________________
     private static int[][] findCentroid(int[][] vector, Map<int[][], List<int[][]>> codeBook) {
         for (Map.Entry<int[][], List<int[][]>> entry : codeBook.entrySet()) {
             if (entry.getValue().contains(vector)) {
@@ -212,7 +190,7 @@ public class CompressionDecompression {
         }
         return null;
     }
-
+    //______________________________________________________________________________________________________
     public static void writeToFileAsCompressed(Map<int[][], List<int[][]>> codeBook, ArrayList<Integer> compressedList, int sizeOfVector, int height, int width) {
         try (DataOutputStream outputStream = new DataOutputStream(new FileOutputStream("compressed.bin"))) {
             outputStream.writeByte(sizeOfVector);
@@ -234,7 +212,8 @@ public class CompressionDecompression {
             e.printStackTrace();
         }
     }
-    public void decompress(String filePathForCompressed,String filePathForDecompressed) {
+    //______________________________________________________________________________________________________
+    public static void decompress(String filePathForCompressed,String filePathForDecompressed) {
         ArrayList<int[][]> codeBook = new ArrayList<>();
         ArrayList<Integer> compressedList = new ArrayList<>();
         int height = 0;
@@ -275,13 +254,5 @@ public class CompressionDecompression {
             }
         }
         writeImage(pixels, filePathForDecompressed);
-    }
-}
-class Main {
-    public static void main(String[] args) {
-        int[][] image = CompressionDecompression.readImage("C:\\Users\\Ziad Ayman\\Desktop\\giraffe-Gray.bmp");
-        CompressionDecompression.notColoredCompress(image, 2, 64);
-        CompressionDecompression compressionDecompression = new CompressionDecompression();
-        compressionDecompression.decompress("compressed.bin","decompressed");
     }
 }
