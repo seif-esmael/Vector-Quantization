@@ -26,7 +26,6 @@ public class CompressionDecompression {
             return null;
         }
     }
-
     public static int[][][] readImageColored(String imagePath) {
         try {
             File file = new File(imagePath);
@@ -94,7 +93,6 @@ public class CompressionDecompression {
             e.printStackTrace();
         }
     }
-
     public static void notColoredCompress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][]> vectors = new ArrayList<>();
         for (int i = 0; i < pixels.length; i += vectorSize) {
@@ -142,8 +140,6 @@ public class CompressionDecompression {
         ArrayList<Integer> compressedList = generateStream(vectors, codeBook);
         writeToFileAsCompressed(codeBook, compressedList, vectorSize, pixels.length, pixels[0].length);
     }
-
-
     public static Map<int[][], List<int[][]>> suitableCentriods(Map<int[][], List<int[][]>> codeBook, List<int[][]> vectors) {
         for (int i = 0; i < vectors.size(); i++) {
             int[][] vector = vectors.get(i);
@@ -238,12 +234,14 @@ public class CompressionDecompression {
             e.printStackTrace();
         }
     }
-
-    public static void readFromCompressed(String filePath) {
-        try (DataInputStream inputStream = new DataInputStream(new FileInputStream(filePath))) {
+    public void decompress(String filePathForCompressed,String filePathForDecompressed) {
+        ArrayList<int[][]> codeBook = new ArrayList<>();
+        ArrayList<Integer> compressedList = new ArrayList<>();
+        int height = 0;
+        int width = 0;
+        try (DataInputStream inputStream = new DataInputStream(new FileInputStream(filePathForCompressed))) {
             int sizeOfVector = inputStream.readUnsignedByte();
             int sizeOfCodeBook = inputStream.readUnsignedByte();
-            ArrayList<int[][]> codeBook = new ArrayList<>();
             for (int i = 0; i < sizeOfCodeBook; i++) {
                 int[][] centroid = new int[sizeOfVector][sizeOfVector];
                 for (int j = 0; j < sizeOfVector; j++) {
@@ -253,26 +251,37 @@ public class CompressionDecompression {
                 }
                 codeBook.add(centroid);
             }
-            int height = inputStream.readUnsignedShort();
-            int width = inputStream.readUnsignedShort();
-            ArrayList<Integer> compressedList = new ArrayList<>();
-            for (int i = 0; i < height * width; i++) {
-                compressedList.add((int) inputStream.readByte());
+            height = inputStream.readUnsignedShort();
+            width = inputStream.readUnsignedShort();
+            for (int i = 0; i < height * width / (sizeOfVector * sizeOfVector); i++) {
+                compressedList.add(inputStream.readUnsignedByte());
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error while reading from file");
         }
-
+        int[][] pixels = new int[height][width];
+        int vectorSize = codeBook.get(0).length;
+        int index = 0;
+        for (int i = 0; i < height; i += vectorSize) {
+            for (int j = 0; j < width; j += vectorSize) {
+                int[][] vector = codeBook.get(compressedList.get(index));
+                index++;
+                for (int k = 0; k < vectorSize; k++) {
+                    for (int l = 0; l < vectorSize; l++) {
+                        pixels[i + k][j + l] = vector[k][l];
+                    }
+                }
+            }
+        }
+        writeImage(pixels, filePathForDecompressed);
     }
-
 }
-
 class Main {
     public static void main(String[] args) {
-        //int[][] pixels = new int[6][6];pixels[0][0] = 1;pixels[0][1] = 2;pixels[0][2] = 7;pixels[0][3] = 9;pixels[0][4] = 4;pixels[0][5] = 11;pixels[1][0] = 3;pixels[1][1] = 4;pixels[1][2] = 6;pixels[1][3] = 6;pixels[1][4] = 12;pixels[1][5] = 12;pixels[2][0] = 4;pixels[2][1] = 9;pixels[2][2] = 15;pixels[2][3] = 14;pixels[2][4] = 9;pixels[2][5] = 9;pixels[3][0] = 10;pixels[3][1] = 10;pixels[3][2] = 20;pixels[3][3] = 18;pixels[3][4] = 8;pixels[3][5] = 8;pixels[4][0] = 4;pixels[4][1] = 3;pixels[4][2] = 17;pixels[4][3] = 16;pixels[4][4] = 1;pixels[4][5] = 4;pixels[5][0] = 4;pixels[5][1] = 5;pixels[5][2] = 18;pixels[5][3] = 18;pixels[5][4] = 5;pixels[5][5] = 6;
         int[][] image = CompressionDecompression.readImage("C:\\Users\\Ziad Ayman\\Desktop\\giraffe-Gray.bmp");
-        CompressionDecompression.notColoredCompress(image, 2, 4);
-
+        CompressionDecompression.notColoredCompress(image, 2, 64);
+        CompressionDecompression compressionDecompression = new CompressionDecompression();
+        compressionDecompression.decompress("compressed.bin","decompressed");
     }
 }
