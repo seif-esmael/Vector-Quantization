@@ -6,8 +6,6 @@ import java.io.*;
 import java.util.*;
 
 public class CompressionDecompression {
-
-//______________________________________________________________________________________________________    
     public static void Compress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][]> vectors = new ArrayList<>();
         for (int i = 0; i < pixels.length; i += vectorSize) {
@@ -36,21 +34,22 @@ public class CompressionDecompression {
                 average[i][j] /= vectors.size();
             }
         }
-        int[][] left = new int[vectorSize][vectorSize];
-        int[][] right = new int[vectorSize][vectorSize];
+        int[][] floor = new int[vectorSize][vectorSize];
+        int[][] ceil = new int[vectorSize][vectorSize];
         for (int i = 0; i < vectorSize; i++) {
             for (int j = 0; j < vectorSize; j++) {
-                right[i][j] = (int) Math.floor(average[i][j] - 1);
-                left[i][j] = (int) Math.floor(average[i][j] + 1);
+                ceil[i][j] = (int) Math.floor(average[i][j] - 1);
+                floor[i][j] = (int) Math.floor(average[i][j] + 1);
             }
         }
-        codeBook.put(right, new ArrayList<>());
-        codeBook.put(left, new ArrayList<>());
+        codeBook.put(ceil, new ArrayList<>());
+        codeBook.put(floor, new ArrayList<>());
         codeBook = suitableCentriods(codeBook, vectors);
         while (codeBook.size() < numberOfVectorsInCodeBook) {
             codeBook = split(codeBook, vectorSize);
             codeBook = suitableCentriods(codeBook, vectors);
         }
+        codeBook = suitableCentriods(codeBook, vectors);
         ArrayList<Integer> compressedList = generateStream(vectors, codeBook);
         writeToFileAsCompressed(codeBook, compressedList, vectorSize, pixels.length, pixels[0].length);
     }
@@ -94,16 +93,16 @@ public class CompressionDecompression {
                     average[i][j] /= codeBook.get(centroid).size();
                 }
             }
-            int[][] left = new int[vectorSize][vectorSize];
-            int[][] right = new int[vectorSize][vectorSize];
+            int[][] ceil = new int[vectorSize][vectorSize];
+            int[][] floor = new int[vectorSize][vectorSize];
             for (int i = 0; i < vectorSize; i++) {
                 for (int j = 0; j < vectorSize; j++) {
-                    left[i][j] = (int) Math.floor(average[i][j] - 1);
-                    right[i][j] = (int) Math.floor(average[i][j] + 1);
+                    ceil[i][j] = (int) Math.floor(average[i][j] - 1);
+                    floor[i][j] = (int) Math.floor(average[i][j] + 1);
                 }
             }
-            newCodeBook.put(left, new ArrayList<>());
-            newCodeBook.put(right, new ArrayList<>());
+            newCodeBook.put(ceil, new ArrayList<>());
+            newCodeBook.put(floor, new ArrayList<>());
         }
         return newCodeBook;
     }
@@ -114,6 +113,7 @@ public class CompressionDecompression {
         for (int[][] vector : vectors) {
             int[][] centroid = findCentroid(vector, codeBook);
             compressedList.add(centroids.indexOf(centroid));
+
         }
         return compressedList;
     }
@@ -199,11 +199,11 @@ public class CompressionDecompression {
             int width = image.getWidth();
             int height = image.getHeight();
             int[][] pixels = new int[height][width];
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    int color = image.getRGB(j, i);
-                    int k = (color >> 16) & 0xFF;
-                    pixels[k][j] = k;
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int rgb = image.getRGB(x, y);
+                    int red = (rgb >> 16) & 0xFF;
+                    pixels[y][x] = red;
                 }
             }
             return pixels;
@@ -213,7 +213,7 @@ public class CompressionDecompression {
         }
     }
     //______________________________________________________________________________________________________
-    /*public static int[][][] readImageColored(String imagePath) {
+    public static int[][][] readImageColored(String imagePath) {
         try {
             File file = new File(imagePath);
             BufferedImage image = ImageIO.read(file);
@@ -236,7 +236,7 @@ public class CompressionDecompression {
             e.printStackTrace();
             return null;
         }
-    }*/
+    }
     //______________________________________________________________________________________________________
     public static void writeImage(int[][] pixels, String outputPath) {
         try {
@@ -256,3 +256,10 @@ public class CompressionDecompression {
         }
     }
 }
+/*class ziad{
+    public static void main(String[] args) {
+        CompressionDecompression.Compress(CompressionDecompression.readImage("D:\\FCAI\\semster5\\Data compression\\Vector-Quantization\\giraffe-Gray.bmp"), 2, 64);
+
+        CompressionDecompression.decompress("compressed.bin","D:\\FCAI\\semster5\\Data compression\\Vector-Quantization\\decompressed.jpg");
+    }
+}*/

@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
  *
  * @author Seif
  */
-public class Interface extends javax.swing.JFrame {
+public class grayScaleRun extends javax.swing.JFrame {
     boolean browsed = false;
     int result[][];
     String absolutePath;
@@ -20,7 +20,7 @@ public class Interface extends javax.swing.JFrame {
     /**
      * Creates new form Interface
      */
-    public Interface() {
+    public grayScaleRun() {
         initComponents();
     }
 
