@@ -6,69 +6,7 @@ import java.io.*;
 import java.util.*;
 
 public class CompressionDecompression {
-    public static int[][] readImage(String imagePath) {
-        try {
-            File file = new File(imagePath);
-            BufferedImage image = ImageIO.read(file);
-            int width = image.getWidth();
-            int height = image.getHeight();
-            int[][] pixels = new int[height][width];
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int rgb = image.getRGB(x, y);
-                    int red = (rgb >> 16) & 0xFF;
-                    pixels[y][x] = red;
-                }
-            }
-            return pixels;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-    //______________________________________________________________________________________________________
-    public static int[][][] readImageColored(String imagePath) {
-        try {
-            File file = new File(imagePath);
-            BufferedImage image = ImageIO.read(file);
-            int width = image.getWidth();
-            int height = image.getHeight();
-            int[][][] pixels = new int[height][width][3];
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int rgb = image.getRGB(x, y);
-                    int red = (rgb >> 16) & 0xFF;
-                    int green = (rgb >> 8) & 0xFF;
-                    int blue = rgb & 0xFF;
-                    pixels[y][x][0] = red;
-                    pixels[y][x][1] = green;
-                    pixels[y][x][2] = blue;
-                }
-            }
-            return pixels;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-//______________________________________________________________________________________________________
-    public static void writeImage(int[][] pixels, String outputPath) {
-        try {
-            int height = pixels.length;
-            int width = pixels[0].length;
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int pixelValue = pixels[y][x] << 16 | pixels[y][x] << 8 | pixels[y][x];
-                    image.setRGB(x, y, pixelValue);
-                }
-            }
-            ImageIO.write(image, "jpg", new File(outputPath));
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 //______________________________________________________________________________________________________    
     public static void Compress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][]> vectors = new ArrayList<>();
@@ -98,22 +36,21 @@ public class CompressionDecompression {
                 average[i][j] /= vectors.size();
             }
         }
-        int[][] floor = new int[vectorSize][vectorSize];
-        int[][] ceil = new int[vectorSize][vectorSize];
+        int[][] left = new int[vectorSize][vectorSize];
+        int[][] right = new int[vectorSize][vectorSize];
         for (int i = 0; i < vectorSize; i++) {
             for (int j = 0; j < vectorSize; j++) {
-                ceil[i][j] = (int) Math.floor(average[i][j] - 1);
-                floor[i][j] = (int) Math.floor(average[i][j] + 1);
+                right[i][j] = (int) Math.floor(average[i][j] - 1);
+                left[i][j] = (int) Math.floor(average[i][j] + 1);
             }
         }
-        codeBook.put(ceil, new ArrayList<>());
-        codeBook.put(floor, new ArrayList<>());
+        codeBook.put(right, new ArrayList<>());
+        codeBook.put(left, new ArrayList<>());
         codeBook = suitableCentriods(codeBook, vectors);
         while (codeBook.size() < numberOfVectorsInCodeBook) {
             codeBook = split(codeBook, vectorSize);
             codeBook = suitableCentriods(codeBook, vectors);
         }
-        codeBook = suitableCentriods(codeBook, vectors);
         ArrayList<Integer> compressedList = generateStream(vectors, codeBook);
         writeToFileAsCompressed(codeBook, compressedList, vectorSize, pixels.length, pixels[0].length);
     }
@@ -157,16 +94,16 @@ public class CompressionDecompression {
                     average[i][j] /= codeBook.get(centroid).size();
                 }
             }
-            int[][] ceil = new int[vectorSize][vectorSize];
-            int[][] floor = new int[vectorSize][vectorSize];
+            int[][] left = new int[vectorSize][vectorSize];
+            int[][] right = new int[vectorSize][vectorSize];
             for (int i = 0; i < vectorSize; i++) {
                 for (int j = 0; j < vectorSize; j++) {
-                    ceil[i][j] = (int) Math.floor(average[i][j] - 1);
-                    floor[i][j] = (int) Math.floor(average[i][j] + 1);
+                    left[i][j] = (int) Math.floor(average[i][j] - 1);
+                    right[i][j] = (int) Math.floor(average[i][j] + 1);
                 }
             }
-            newCodeBook.put(ceil, new ArrayList<>());
-            newCodeBook.put(floor, new ArrayList<>());
+            newCodeBook.put(left, new ArrayList<>());
+            newCodeBook.put(right, new ArrayList<>());
         }
         return newCodeBook;
     }
@@ -177,7 +114,6 @@ public class CompressionDecompression {
         for (int[][] vector : vectors) {
             int[][] centroid = findCentroid(vector, codeBook);
             compressedList.add(centroids.indexOf(centroid));
-
         }
         return compressedList;
     }
@@ -218,9 +154,11 @@ public class CompressionDecompression {
         ArrayList<Integer> compressedList = new ArrayList<>();
         int height = 0;
         int width = 0;
+        int sizeOfVector = 0;
+        int sizeOfCodeBook = 0;
         try (DataInputStream inputStream = new DataInputStream(new FileInputStream(filePathForCompressed))) {
-            int sizeOfVector = inputStream.readUnsignedByte();
-            int sizeOfCodeBook = inputStream.readUnsignedByte();
+            sizeOfVector = inputStream.readUnsignedByte();
+            sizeOfCodeBook = inputStream.readUnsignedByte();
             for (int i = 0; i < sizeOfCodeBook; i++) {
                 int[][] centroid = new int[sizeOfVector][sizeOfVector];
                 for (int j = 0; j < sizeOfVector; j++) {
@@ -240,19 +178,81 @@ public class CompressionDecompression {
             System.out.println("Error while reading from file");
         }
         int[][] pixels = new int[height][width];
-        int vectorSize = codeBook.get(0).length;
         int index = 0;
-        for (int i = 0; i < height; i += vectorSize) {
-            for (int j = 0; j < width; j += vectorSize) {
+        for (int i = 0; i < height; i += sizeOfVector) {
+            for (int j = 0; j < width; j += sizeOfVector) {
                 int[][] vector = codeBook.get(compressedList.get(index));
                 index++;
-                for (int k = 0; k < vectorSize; k++) {
-                    for (int l = 0; l < vectorSize; l++) {
+                for (int k = 0; k < sizeOfVector; k++) {
+                    for (int l = 0; l < sizeOfVector; l++) {
                         pixels[i + k][j + l] = vector[k][l];
                     }
                 }
             }
         }
         writeImage(pixels, filePathForDecompressed);
+    }
+    public static int[][] readImage(String imagePath) {
+        try {
+            File file = new File(imagePath);
+            BufferedImage image = ImageIO.read(file);
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[][] pixels = new int[height][width];
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    int color = image.getRGB(j, i);
+                    int k = (color >> 16) & 0xFF;
+                    pixels[k][j] = k;
+                }
+            }
+            return pixels;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    //______________________________________________________________________________________________________
+    /*public static int[][][] readImageColored(String imagePath) {
+        try {
+            File file = new File(imagePath);
+            BufferedImage image = ImageIO.read(file);
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[][][] pixels = new int[height][width][3];
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int rgb = image.getRGB(x, y);
+                    int red = (rgb >> 16) & 0xFF;
+                    int green = (rgb >> 8) & 0xFF;
+                    int blue = rgb & 0xFF;
+                    pixels[y][x][0] = red;
+                    pixels[y][x][1] = green;
+                    pixels[y][x][2] = blue;
+                }
+            }
+            return pixels;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }*/
+    //______________________________________________________________________________________________________
+    public static void writeImage(int[][] pixels, String outputPath) {
+        try {
+            int height = pixels.length;
+            int width = pixels[0].length;
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int pixelValue = pixels[y][x] << 16 | pixels[y][x] << 8 | pixels[y][x];
+                    image.setRGB(x, y, pixelValue);
+                }
+            }
+            ImageIO.write(image, "jpg", new File(outputPath));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
