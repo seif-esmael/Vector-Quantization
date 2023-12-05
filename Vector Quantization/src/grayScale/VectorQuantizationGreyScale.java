@@ -1,11 +1,11 @@
-package vector.quantization;
+package grayScale;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
-public class grayScale {
-    public static void Compress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
+public class VectorQuantizationGreyScale {
+    public static void compress(int[][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][]> vectors = new ArrayList<>();
         for (int i = 0; i < pixels.length; i += vectorSize) {
             for (int j = 0; j < pixels[0].length; j += vectorSize) {
@@ -43,17 +43,17 @@ public class grayScale {
         }
         codeBook.put(ceil, new ArrayList<>());
         codeBook.put(floor, new ArrayList<>());
-        codeBook = suitableCentriods(codeBook, vectors);
+        codeBook = suitableCentroids(codeBook, vectors);
         while (codeBook.size() < numberOfVectorsInCodeBook) {
             codeBook = split(codeBook, vectorSize);
-            codeBook = suitableCentriods(codeBook, vectors);
+            codeBook = suitableCentroids(codeBook, vectors);
         }
-        codeBook = suitableCentriods(codeBook, vectors);
+        codeBook = suitableCentroids(codeBook, vectors);
         ArrayList<Integer> compressedList = generateStream(vectors, codeBook);
         writeToFileAsCompressed(codeBook, compressedList, vectorSize, pixels.length, pixels[0].length);
     }
     //______________________________________________________________________________________________________
-    public static Map<int[][], List<int[][]>> suitableCentriods(Map<int[][], List<int[][]>> codeBook, List<int[][]> vectors) {
+    public static Map<int[][], List<int[][]>> suitableCentroids(Map<int[][], List<int[][]>> codeBook, List<int[][]> vectors) {
         for (int i = 0; i < vectors.size(); i++) {
             int[][] vector = vectors.get(i);
             int minDistance = Integer.MAX_VALUE;
@@ -255,10 +255,4 @@ public class grayScale {
         }
     }
 }
-/*class ziad{
-    public static void main(String[] args) {
-        CompressionDecompression.Compress(CompressionDecompression.readImage("D:\\FCAI\\semster5\\Data compression\\Vector-Quantization\\giraffe-Gray.bmp"), 2, 64);
 
-        CompressionDecompression.decompress("compressed.bin","D:\\FCAI\\semster5\\Data compression\\Vector-Quantization\\decompressed.jpg");
-    }
-}*/

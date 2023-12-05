@@ -1,10 +1,12 @@
+package rgb;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
-class CompressionDecompressionRGB {
-    public static void Compress(int[][][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
+public class VectorQuantizationRGB {
+    public static void compress(int[][][] pixels, int vectorSize, int numberOfVectorsInCodeBook) {
         List<int[][][]> vectors = new ArrayList<>();
         for (int i = 0; i < pixels.length; i += vectorSize) {
             for (int j = 0; j < pixels[0].length; j += vectorSize) {
@@ -75,9 +77,6 @@ class CompressionDecompressionRGB {
         }
         return null;
     }
-
-    // ... (other methods remain unchanged)
-
     public static void writeToFileAsCompressed(Map<int[][][], List<int[][][]>> codeBook, ArrayList<Integer> compressedList, int sizeOfVector, int height, int width) {
         try (DataOutputStream outputStream = new DataOutputStream(new FileOutputStream("compressed.bin"))) {
             outputStream.writeByte(sizeOfVector);
@@ -124,7 +123,6 @@ class CompressionDecompressionRGB {
         }
         return codeBook;
     }
-
     public static Map<int[][][], List<int[][][]>> split(Map<int[][][], List<int[][][]>> codeBook, int vectorSize) {
         Map<int[][][], List<int[][][]>> newCodeBook = new HashMap<>();
         for (int[][][] centroid : codeBook.keySet()) {
@@ -161,9 +159,7 @@ class CompressionDecompressionRGB {
         }
         return newCodeBook;
     }
-
-
-    public static void decompressRGB(String filePathForCompressed, String filePathForDecompressed) {
+    public static void decompress(String filePathForCompressed, String filePathForDecompressed) {
         ArrayList<int[][][]> codeBook = new ArrayList<>();
         ArrayList<Integer> compressedList = new ArrayList<>();
         int height = 0;
@@ -210,9 +206,6 @@ class CompressionDecompressionRGB {
         }
         writeImageRGB(pixels, filePathForDecompressed);
     }
-
-    // Other methods remain unchanged...
-
     public static void writeImageRGB(int[][][] pixels, String outputPath) {
         try {
             int height = pixels.length;
@@ -255,10 +248,3 @@ class CompressionDecompressionRGB {
     }
 }
 
-class ziad{
-    public static void main(String[] args) {
-        int[][][] pixels = CompressionDecompressionRGB.readImageColored("D:\\FCAI\\semster5\\Data compression\\Vector-Quantization\\Vector Quantization\\src\\mario.bmp");
-        CompressionDecompressionRGB.Compress(pixels, 2, 64);
-        CompressionDecompressionRGB.decompressRGB("compressed.bin", "decompressed.jpg");
-    }
-}
